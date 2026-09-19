@@ -1,0 +1,14 @@
+paths:
+  aliases:
+    data_file: data/input.json
+imports:
+  warm_cache: examples.lifecycle_tasks.warm_cache
+  fail_startup: examples.lifecycle_tasks.fail_startup
+  close_database: examples.lifecycle_tasks.close_database
+modules:
+  tasks: examples.lifecycle_tasks
+background_tasks:
+  on_startup:
+    sequential: [warm_cache, fail_startup]
+    threaded: []
+  on_shutdown: [close_database]

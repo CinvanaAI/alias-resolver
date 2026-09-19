@@ -1,0 +1,28 @@
+{
+  "path": "data/input.json",
+  "input": {
+    "message": "Synthetic lifecycle example"
+  },
+  "import_matches_module": true,
+  "startup": {
+    "completed": [
+      "warm_cache"
+    ],
+    "started_threads": [],
+    "failures": [
+      "fail_startup: synthetic startup failure"
+    ]
+  },
+  "shutdown": {
+    "completed": [
+      "close_database"
+    ],
+    "started_threads": [],
+    "failures": []
+  },
+  "events": [
+    "cache warmed",
+    "startup failed",
+    "database closed"
+  ]
+}

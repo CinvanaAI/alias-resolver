@@ -1,0 +1,13 @@
+paths:
+  aliases:
+    data_file: data/input.json
+
+imports: {}
+modules: {}
+
+background_tasks:
+  on_startup:
+    sequential: []
+    threaded: []
+  on_shutdown: []
+

@@ -1,0 +1,28 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install package and test dependencies
+        run: python -m pip install --upgrade pip setuptools wheel && python -m pip install -e ".[test]"
+      - name: Run resolver tests
+        run: python -m pytest -q
+      - name: Inspect the synthetic configuration
+        run: alias-resolver list examples/config.yaml
+      - name: Compile package and examples
+        run: python -m compileall -q src examples
+      - name: Build wheel
+        run: python -m pip wheel . --no-deps --no-build-isolation --wheel-dir dist
