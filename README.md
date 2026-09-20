@@ -1,7 +1,5 @@
 # Alias Resolver
 
-Keep shared paths, imports, and lifecycle calls in one reviewed YAML file.
-
 Use one reviewed configuration to resolve project paths, Python imports, modules, and application lifecycle calls.
 
 ## See it work

@@ -57,8 +57,8 @@ Sequential task failures and thread-launch failures appear in the returned resul
 Inspect a configuration without importing anything:
 
 ```powershell
-alias-resolver list config.yaml
-alias-resolver resolve-path config.yaml data_file
+alias-resolver list examples/lifecycle.yaml
+alias-resolver resolve-path examples/lifecycle.yaml data_file
 ```
 
 ## Security boundary
@@ -82,3 +82,32 @@ python -m pytest
 ```
 
 Licensed under Apache-2.0. See `ORIGIN.md` for the extraction boundary.
+
+## Startup failure is a result the application must handle
+
+The included lifecycle fixture warms a cache, deliberately fails another task,
+and closes its synthetic database on shutdown. Tasks are attempted in list
+order; a failure does not roll back earlier tasks or stop later tasks. The
+resolver never schedules shutdown automatically. The application owns that
+boundary:
+
+```python
+resolver = Resolver.from_yaml(Path("examples/lifecycle.yaml"))
+try:
+    startup = resolver.run_startup_tasks()
+    if not startup.ok:
+        raise RuntimeError("; ".join(startup.failures))
+    # Serve requests only after accepting the startup result.
+finally:
+    shutdown = resolver.run_shutdown_tasks()
+    if not shutdown.ok:
+        print("Shutdown failures:", shutdown.failures)
+```
+
+An absent section is allowed. A supplied section with the wrong type raises
+`ValueError`; a missing alias raises `KeyError`; a missing module or attribute
+raises the corresponding Python import/attribute exception. Inside lifecycle
+calls, task exceptions become named `failures`. `resolve_path` checks containment,
+not file existence, so callers opening required input files still handle
+`FileNotFoundError`. All task imports must be trusted. This configuration-error
+repair is part of the public continuation described in [Origin](../ORIGIN.md).

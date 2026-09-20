@@ -73,3 +73,24 @@ def test_alias_listing_does_not_import_modules(tmp_path: Path) -> None:
     )
     assert resolver.aliases()["imports"] == ("later",)
 
+
+@pytest.mark.parametrize("document", ["false", "[]", "0", "''"])
+def test_rejects_falsey_non_mapping_yaml(tmp_path: Path, document: str) -> None:
+    config = tmp_path / "bad.yaml"
+    config.write_text(document, encoding="utf-8")
+    with pytest.raises(ValueError, match="mapping"):
+        Resolver.from_yaml(config)
+
+
+@pytest.mark.parametrize("section", [None, [], "startup"])
+def test_rejects_malformed_lifecycle_container(tmp_path: Path, section) -> None:
+    resolver = Resolver({"background_tasks": section}, tmp_path)
+    for action in (resolver.aliases, resolver.run_startup_tasks, resolver.run_shutdown_tasks):
+        with pytest.raises(ValueError, match="background_tasks must be a mapping"):
+            action()
+
+
+def test_rejects_malformed_paths_container(tmp_path: Path) -> None:
+    resolver = Resolver({"paths": []}, tmp_path)
+    with pytest.raises(ValueError, match="paths.aliases"):
+        resolver.aliases()

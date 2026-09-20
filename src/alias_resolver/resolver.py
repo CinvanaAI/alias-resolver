@@ -33,7 +33,7 @@ class Resolver:
         if not config_path.is_file():
             raise FileNotFoundError(config_path)
         loaded = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        return cls(loaded or {}, config_path.parent)
+        return cls({} if loaded is None else loaded, config_path.parent)
 
     def aliases(self) -> dict[str, tuple[str, ...]]:
         startup = self._startup_config()
@@ -105,14 +105,14 @@ class Resolver:
         value: Any = self.config
         for key in keys:
             if not isinstance(value, dict):
-                return {}
+                raise ValueError(f"Configuration section {'.'.join(keys)} must contain mappings.")
             value = value.get(key, {})
         if not isinstance(value, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in value.items()):
             raise ValueError(f"Configuration section {'.'.join(keys)} must map strings to strings.")
         return value
 
     def _startup_config(self) -> dict[str, list[str]]:
-        value = self.config.get("background_tasks", {}).get("on_startup", {})
+        value = self._background_config().get("on_startup", {})
         if not isinstance(value, dict):
             raise ValueError("background_tasks.on_startup must be a mapping.")
         normalized = {
@@ -125,9 +125,15 @@ class Resolver:
         return normalized
 
     def _shutdown_config(self) -> list[str]:
-        value = self.config.get("background_tasks", {}).get("on_shutdown", [])
+        value = self._background_config().get("on_shutdown", [])
         if not isinstance(value, list) or not all(isinstance(task, str) for task in value):
             raise ValueError("background_tasks.on_shutdown must be a list of import aliases.")
+        return value
+
+    def _background_config(self) -> dict[str, Any]:
+        value = self.config.get("background_tasks", {})
+        if not isinstance(value, dict):
+            raise ValueError("background_tasks must be a mapping.")
         return value
 
     @staticmethod
@@ -135,4 +141,3 @@ class Resolver:
         if alias not in mapping:
             raise KeyError(f"{kind} alias {alias!r} not found. Available: {sorted(mapping)}")
         return mapping[alias]
-
